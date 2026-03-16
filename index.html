@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusCash – Student Budget Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">Campus<span>Cash</span></div>
+    <p class="auth-sub">Your personal student budget companion</p>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchAuth('login')">&#128273; Login</button>
+      <button class="auth-tab" id="tab-register" onclick="switchAuth('register')">&#10024; Register</button>
+    </div>
+
+    <!-- LOGIN PANEL -->
+    <div class="auth-panel active" id="panel-login">
+      <div class="field-group">
+        <label>Username</label>
+        <input type="text" id="l-user" placeholder="Your registered username" />
+      </div>
+      <div class="field-group">
+        <label>Password</label>
+        <input type="password" id="l-pass" placeholder="Your password" />
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Login &rarr;</button>
+      <p class="auth-msg err" id="login-err"></p>
+      <div class="auth-switch">No account? <button onclick="switchAuth('register')">Register here</button></div>
+    </div>
+
+    <!-- REGISTER PANEL -->
+    <div class="auth-panel" id="panel-register">
+      <div class="field-group">
+        <label>Full Name</label>
+        <input type="text" id="r-name" placeholder="e.g. Alex Johnson" />
+      </div>
+      <div class="field-group">
+        <label>Username</label>
+        <input type="text" id="r-user" placeholder="Choose a unique username" />
+      </div>
+      <div class="field-group">
+        <label>Password</label>
+        <input type="password" id="r-pass" placeholder="Min 4 characters" />
+      </div>
+      <div class="field-group">
+        <label>Confirm Password</label>
+        <input type="password" id="r-pass2" placeholder="Re-enter password" />
+      </div>
+      <div class="field-group">
+        <label>Monthly Income (&#8377;)</label>
+        <input type="number" id="r-income" placeholder="e.g. 15000" min="1" />
+        <p class="income-hint">Scholarship, stipend, part-time or allowance</p>
+      </div>
+      <button class="btn-primary" onclick="doRegister()">Create Account &rarr;</button>
+      <p class="auth-msg err" id="reg-err"></p>
+      <p class="auth-msg ok" id="reg-ok">Account created! Redirecting to login...</p>
+      <div class="auth-switch">Have an account? <button onclick="switchAuth('login')">Login here</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <nav class="nav">
+    <div class="nav-logo">Campus<span>Cash</span></div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="ntab-dash" onclick="switchPage('dashboard')">&#128202; Dashboard</button>
+      <button class="nav-tab hist" id="ntab-hist" onclick="switchPage('history')">&#128274; Previous Months</button>
+    </div>
+    <div class="nav-right">
+      <div class="nav-user">Hello, <strong id="disp-name"></strong></div>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard">
+
+      <div class="alert-banner" id="alert-banner">
+        <div class="alert-inner">
+          <span class="alert-icon">&#9888;&#65039;</span>
+          <div class="alert-text">
+            <strong>Budget Alert - You have used over 80% of your monthly income!</strong>
+            <p id="alert-msg"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card sc-green">
+          <div class="stat-label">Monthly Income</div>
+          <div class="stat-value sv-green" id="s-income">&#8377;0</div>
+          <div class="stat-sub">Total available</div>
+        </div>
+        <div class="stat-card sc-red">
+          <div class="stat-label">Spent This Month</div>
+          <div class="stat-value sv-red" id="s-spent">&#8377;0</div>
+          <div class="stat-sub" id="s-spent-sub">of budget used</div>
+        </div>
+        <div class="stat-card sc-purple">
+          <div class="stat-label">Remaining</div>
+          <div class="stat-value sv-purple" id="s-remaining">&#8377;0</div>
+          <div class="stat-sub">left to spend</div>
+        </div>
+        <div class="stat-card sc-warn">
+          <div class="stat-label">Total Entries</div>
+          <div class="stat-value sv-warn" id="s-count">0</div>
+          <div class="stat-sub">this month</div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-header">
+          <div>
+            <div class="panel-title" style="margin-bottom:4px"><span class="dot"></span> Monthly Budget Usage</div>
+            <div style="font-size:12px;color:var(--muted)">80% threshold marks the warning zone</div>
+          </div>
+          <div class="progress-pct" id="prog-pct">0%</div>
+        </div>
+        <div class="progress-track" style="position:relative">
+          <div class="marker-label">&#9888; 80%</div>
+          <div class="marker-80"></div>
+          <div class="progress-fill" id="prog-fill"></div>
+        </div>
+        <div class="progress-markers">
+          <span>&#8377;0</span><span>25%</span><span>50%</span><span>75%</span>
+          <span id="pm-max">&#8377;0</span>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-title"><span class="dot"></span> Add Expense</div>
+          <div class="field-group">
+            <label>Description</label>
+            <input type="text" id="e-desc" placeholder="e.g. Canteen lunch" />
+          </div>
+          <div class="field-group">
+            <label>Amount (&#8377;)</label>
+            <input type="number" id="e-amt" placeholder="e.g. 250" min="0" />
+          </div>
+          <div class="field-group">
+            <label>Category</label>
+            <select id="e-cat">
+              <option value="Food">Food and Dining</option>
+              <option value="Transport">Transport</option>
+              <option value="Study">Study and Books</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Health">Health</option>
+              <option value="Clothing">Clothing</option>
+              <option value="Utilities">Utilities</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>Month</label>
+            <select id="e-month" onchange="onMonthChange()">
+              <option value="0">January</option>
+              <option value="1">February</option>
+              <option value="2">March</option>
+              <option value="3">April</option>
+              <option value="4">May</option>
+              <option value="5">June</option>
+              <option value="6">July</option>
+              <option value="7">August</option>
+              <option value="8">September</option>
+              <option value="9">October</option>
+              <option value="10">November</option>
+              <option value="11">December</option>
+            </select>
+            <div id="prev-month-hint">
+              This is a previous month. The expense will be saved into
+              <span class="month-badge" id="hint-month-name"></span> history
+              under Previous Months.
+            </div>
+          </div>
+          <button class="btn-add" onclick="addExpense()">+ Add Expense</button>
+          <div class="prev-quick-access" id="prev-quick-access">
+            <div class="pqa-left"><span>Saved to</span><strong id="pqa-month"></strong></div>
+            <button class="btn-view-hist" onclick="jumpToHistory()">View in History</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">
+            <span class="dot" style="background:var(--accent2);box-shadow:0 0 8px var(--accent2)"></span>
+            Recent Expenses
+          </div>
+          <div class="expense-list" id="expense-list">
+            <div class="empty-state">No expenses yet. Add your first entry.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-section">
+        <div class="chart-header">
+          <div class="panel-title" style="margin-bottom:0">
+            <span class="dot" style="background:var(--accent2);box-shadow:0 0 8px var(--accent2)"></span>
+            Yearly Expense Overview
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="yearly-chart"></canvas>
+        </div>
+      </div>
+
+      <div class="bottom-row" style="grid-template-columns:1fr">
+        <div class="panel">
+          <div class="panel-title">
+            <span class="dot" style="background:var(--accent3);box-shadow:0 0 8px var(--accent3)"></span>
+            Spending by Category -
+            <span id="pie-month-label" style="color:var(--accent3);margin-left:4px"></span>
+          </div>
+          <div style="max-width:200px;margin:0 auto">
+            <canvas id="cat-chart" height="180"></canvas>
+          </div>
+          <div class="pie-legend" id="pie-legend"></div>
+        </div>
+      </div>
+
+    </div><!-- /page-dashboard -->
+
+    <!-- HISTORY -->
+    <div id="page-history">
+
+      <div class="history-header">
+        <div>
+          <div class="history-title">
+            Previous Month History
+            <span class="lock-badge">Read-Only</span>
+          </div>
+          <div class="history-sub">View past expenses - no edits or deletions allowed</div>
+        </div>
+        <div class="month-selector-row">
+          <button class="month-nav-btn" id="hist-prev-btn" onclick="histNav(-1)">&lt;</button>
+          <div class="month-display" id="hist-month-label">-</div>
+          <button class="month-nav-btn" id="hist-next-btn" onclick="histNav(1)">&gt;</button>
+        </div>
+      </div>
+
+      <div class="readonly-notice">
+        <span style="font-size:18px">&#128274;</span>
+        <span>This is a <strong>read-only archive</strong>. Records are locked for accurate financial history.</span>
+      </div>
+
+      <div class="hist-stats">
+        <div class="stat-card sc-purple">
+          <div class="stat-label">Total Spent</div>
+          <div class="stat-value sv-purple" id="hs-spent">&#8377;0</div>
+          <div class="stat-sub" id="hs-spent-sub">of income</div>
+        </div>
+        <div class="stat-card sc-green">
+          <div class="stat-label">Savings</div>
+          <div class="stat-value sv-green" id="hs-saved">&#8377;0</div>
+          <div class="stat-sub" id="hs-saved-sub">leftover</div>
+        </div>
+        <div class="stat-card sc-warn">
+          <div class="stat-label">Entries</div>
+          <div class="stat-value sv-warn" id="hs-count">0</div>
+          <div class="stat-sub">expense records</div>
+        </div>
+      </div>
+
+      <div class="hist-list-wrap">
+        <div class="hist-list-title">
+          <span class="dot" style="background:var(--accent2);box-shadow:0 0 8px var(--accent2)"></span>
+          Entries for <span id="hist-month-name" style="color:var(--accent2)">-</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--muted)">locked - view only</span>
+        </div>
+        <div class="hist-expense-list" id="hist-expense-list">
+          <div class="empty-state">No expenses recorded for this month.</div>
+        </div>
+      </div>
+
+      <div class="hist-cat-breakdown">
+        <div class="hist-list-title">
+          <span class="dot" style="background:var(--warn);box-shadow:0 0 8px var(--warn)"></span>
+          Spending by Category -
+          <span id="hist-cat-month" style="color:var(--warn)">-</span>
+        </div>
+        <div class="hist-cat-grid">
+          <canvas id="hist-cat-chart" height="180"></canvas>
+          <div id="hist-cat-bars">
+            <div style="font-size:12px;color:var(--muted);text-align:center;padding:20px 0">No data for this month</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-history -->
+
+  </div><!-- /main -->
+
+  <div class="toast" id="toast">
+    <span id="toast-msg"></span>
+    <div class="toast-bar" id="toast-bar"></div>
+  </div>
+
+</div><!-- /app -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
